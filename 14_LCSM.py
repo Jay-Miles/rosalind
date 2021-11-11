@@ -45,41 +45,46 @@ def get_input(input_file):
 
     with open(input_file, 'r') as file_object:
         iterator = SeqIO.parse(input_file, 'fasta')
-        sequences = [(record.id, record.seq) for record in iterator]
+        records = [(record.id, record.seq) for record in iterator]
     
-    return sequences
+    return records
 
 
-def get_longest_motif(sequences):
+def get_longest_motif(records):
 
     # Find all substrings of all sequences
-    print('Finding all sequence substrings')
+    print('Finding all substrings of first sequence')
 
-    substrings_dict = {}
+    sequences = [record[1] for record in records]
 
-    for record in sequences:
+    record_1 = sequences[0]
+    record_1_length = len(record_1)
 
-        sequence = record[1]
-        seq_length = len(sequence)
+    record_1_substrings = [
+        record_1[i:j] \
+            for i in range(record_1_length) \
+            for j in range(i + 1, record_1_length + 1)
+        ]
 
-        substrings = [
-            sequence[i:j] \
-            for i in range(seq_length) \
-            for j in range(i + 1, seq_length + 1)
-            ]
+    print('Checking if each substring is in all sequences')
 
-        substrings_dict[record[0]] = substrings
-
-    # Identify longest common motif
-    print('Finding longest common motif')
+    common_substrings = []
+    
+    for substring in record_1_substrings:
+        in_all_sequences = all(
+            substring in sequence for sequence in sequences
+            )
+        
+        if in_all_sequences == True:
+            common_substrings.append(substring)
+    
+    print('Finding longest shared substring')
 
     longest_motif = ''
-    motif_length = 0
 
-    for motif in common_motifs:
-        if len(motif) > motif_length:
-            longest_motif = motif
-            motif_length = len(motif)
+    for substring in common_substrings:
+        if len(substring) > len(longest_motif):
+            longest_motif = substring
 
     return longest_motif
 
@@ -91,8 +96,8 @@ def main():
     args = parser.parse_args()
 
     input_file = args.input_file
-    sequences = get_input(input_file)
-    longest_motif = get_longest_motif(sequences)
+    records = get_input(input_file)
+    longest_motif = get_longest_motif(records)
 
     print(longest_motif)
 
